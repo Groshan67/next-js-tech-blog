@@ -1,65 +1,176 @@
+import axios from "axios";
 import Image from "next/image";
+import { MicrocmsResponse, QiitaResponse } from "@/domain/Article";
+import { Suspense } from "react";
+import Link from "next/link";
+
+function CardSkeleton() {
+  return (
+    <div>
+      {[...Array(4)].map((_, i) => (
+        <div
+          key={i}
+          className="overflow-hidden rounded-xl border border-card-border bg-card"
+        >
+          <div className="skeleton h-40 w-full" />
+          <div className="p-4">
+            <div className="skeleton mb-2 h-5 w-3/4" />
+            <div className="skeleton h-4 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+async function QiitaArticles() {
+
+  const response = await axios.get<QiitaResponse[]>(
+    "https://qiita.com/api/v2/items?query=user:Sicut_study&per_page=4",
+    {
+      headers: {
+        "Authorization": `Bearer ${process.env.QIITA_API_KEY}`
+      }
+    }
+  );
+  const items = response.data.map((item) => ({
+    id: item.id,
+    title: item.title,
+    url: item.url,
+    image: "https://qiita-user-contents.imgix.net/https%3A%2F%2Fqiita-image-store.s3.ap-northeast-1.amazonaws.com%2F0%2F810513%2F04c6ef92-7b08-467f-95b0-efd05a0e7ea4.png?ixlib=rb-4.0.0&auto=format&gif-q=60&q=75&w=1400&fit=max&s=255a4084e07534dc5871b77aa1318d0e"
+  }));
+
+  return (
+
+    <div className="grid gap-4 sm:grid-cols-2">
+      {items.map((item) => (
+        <a
+          key={item.id}
+          href={item.url}
+          rel="noopener noreferrer"
+          className="group overflow-hidden rounded-xl border border-card-border bg-card transition-all hover:border-qiita-green hover:shadow-lg"
+        >
+          <div className="relative h-40 w-full overflow-hidden">
+            <Image
+              src={item.image}
+              alt={item.title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
+          <div className="p-4">
+            <p className="line-clamp-2 text-sm font-semibold leading-snug text-foreground group-hover:text-qiita-green">
+              {item.title}
+            </p>
+            <span className="mt-2 inline-block rounded-full bg-qiita-green-light px-2.5 py-0.5 text-xs font-medium text-qiita-green">
+              Qiita
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+async function MicrocmsArticles() {
+
+  const response = await axios.get<MicrocmsResponse>(
+    "https://6f60h6194x.microcms.io/api/v1/blogs",
+    {
+      headers: {
+        "X-MICROCMS-API-KEY": `${process.env.MICROCMS_API_KEY}`
+      }
+    }
+  );
+
+  const items = response.data.contents.map((item) => ({
+    id: item.id,
+    title: item.title,
+    url: `/blogs/${item.id}`,
+    image: item.eyecatch.url
+  }));
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {items.map((item) => (
+        <Link
+          key={item.id}
+          href={item.url}
+          className="group overflow-hidden rounded-xl border border-card-border bg-card transition-all hover:border-accent hover:shadow-lg"
+        >
+          <div className="relative h-40 w-full overflow-hidden">
+            <Image
+              src={item.image}
+              alt={item.title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
+          <div className="p-4">
+            <p className="line-clamp-2 text-sm font-semibold leading-snug text-foreground group-hover:text-accent">
+              {item.title}
+            </p>
+            <span className="mt-2 inline-block rounded-full bg-accent-bg px-2.5 py-0.5 text-xs font-medium text-accent">
+              Blog
+            </span>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="space-y-12">
+      {/* Hero */}
+      <section className="text-center">
+        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+          Tech Blog
+        </h1>
+        <p className="mx-auto mt-3 max-w-xl text-lg text-muted">
+          QiitaとMicroCMSの最新記事をまとめてチェック
+        </p>
+      </section>
+
+      {/* Qiita Section */}
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-xl font-bold">
+            <span className="inline-block h-6 w-1 rounded-full bg-qiita-green" />
+            Qiita 記事
+          </h2>
+          <Link
+            href="/qiita"
+            className="text-sm font-medium text-muted transition-colors hover:text-qiita-green"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            すべて見る &rarr;
+          </Link>
         </div>
-      </main>
+        <Suspense fallback={<CardSkeleton />}>
+          <QiitaArticles />
+        </Suspense>
+      </section>
+
+      {/* Blog Section */}
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-xl font-bold">
+            <span className="inline-block h-6 w-1 rounded-full bg-accent" />
+            ブログ記事
+          </h2>
+          <Link
+            href="/blogs"
+            className="text-sm font-medium text-muted transition-colors hover:text-accent"
+          >
+            すべて見る &rarr;
+          </Link>
+        </div>
+        <Suspense fallback={<CardSkeleton />}>
+          <MicrocmsArticles />
+        </Suspense>
+      </section>
     </div>
   );
 }
